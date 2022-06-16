@@ -1,9 +1,8 @@
 use crate::fixed_point::Minimums;
 use crate::solve::SolveDatabase;
 use chalk_ir::cast::Cast;
-use chalk_ir::fold::Traverse;
 use chalk_ir::interner::{HasInterner, Interner};
-use chalk_ir::visit::Traverse;
+use chalk_ir::traverse::Traverse;
 use chalk_ir::zip::Zip;
 use chalk_ir::{
     Binders, BoundVar, Canonical, ConstrainedSubst, Constraint, Constraints, DomainGoal,

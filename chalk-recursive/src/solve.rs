@@ -3,8 +3,8 @@ use super::fulfill::Fulfill;
 use crate::fixed_point::Minimums;
 use crate::UCanonicalGoal;
 use chalk_ir::could_match::CouldMatch;
-use chalk_ir::fold::Traverse;
 use chalk_ir::interner::{HasInterner, Interner};
+use chalk_ir::traverse::Traverse;
 use chalk_ir::{
     Canonical, ClausePriority, DomainGoal, Fallible, Floundered, Goal, GoalData, InEnvironment,
     NoSolution, ProgramClause, ProgramClauseData, Substitution, UCanonical,
