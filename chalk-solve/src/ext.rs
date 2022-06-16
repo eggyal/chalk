@@ -1,5 +1,5 @@
 use crate::infer::InferenceTable;
-use chalk_ir::fold::Traverse;
+use chalk_ir::traverse::Traverse;
 use chalk_ir::interner::{HasInterner, Interner};
 use chalk_ir::*;
 

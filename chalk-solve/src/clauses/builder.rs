@@ -2,8 +2,9 @@ use std::marker::PhantomData;
 
 use crate::cast::{Cast, CastTo};
 use crate::RustIrDatabase;
-use chalk_ir::fold::{Shift, Traverse};
+use chalk_ir::fold::Shift;
 use chalk_ir::interner::{HasInterner, Interner};
+use chalk_ir::traverse::Traverse;
 use chalk_ir::*;
 use tracing::{debug, instrument};
 

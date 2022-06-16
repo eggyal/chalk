@@ -2,8 +2,8 @@ use super::RecordedItemId;
 use crate::RustIrDatabase;
 use chalk_ir::{
     interner::Interner,
+    traverse::{SuperTraverse, Traverse},
     visit::Visitor,
-    visit::{SuperTraverse, Traverse},
     AliasTy, DebruijnIndex, TyKind, WhereClause,
 };
 use std::ops::ControlFlow;

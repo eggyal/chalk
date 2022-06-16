@@ -1,7 +1,8 @@
 use chalk_ir::fold::shift::Shift;
-use chalk_ir::fold::{Folder, Traverse};
+use chalk_ir::fold::Folder;
 use chalk_ir::interner::HasInterner;
 use chalk_ir::interner::Interner;
+use chalk_ir::traverse::Traverse;
 use chalk_ir::*;
 use rustc_hash::FxHashMap;
 

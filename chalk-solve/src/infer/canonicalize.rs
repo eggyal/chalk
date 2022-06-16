@@ -1,7 +1,8 @@
 use crate::debug_span;
 use chalk_ir::fold::shift::Shift;
-use chalk_ir::fold::{Folder, SuperTraverse, Traverse};
+use chalk_ir::fold::Folder;
 use chalk_ir::interner::{HasInterner, Interner};
+use chalk_ir::traverse::{SuperTraverse, Traverse};
 use chalk_ir::*;
 use std::cmp::max;
 use tracing::{debug, instrument};

@@ -7,8 +7,9 @@
 //! types passed to `program_clauses` in the clauses we generate.
 
 use chalk_ir::{
-    fold::{Folder, Traverse},
+    fold::Folder,
     interner::{HasInterner, Interner},
+    traverse::Traverse,
     Binders, BoundVar, Const, ConstData, ConstValue, DebruijnIndex, Fallible, Lifetime,
     LifetimeData, NoSolution, Ty, TyKind, TyVariableKind, VariableKind, VariableKinds,
 };

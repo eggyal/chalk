@@ -5,11 +5,7 @@ use crate::{
     ext::*, goal_builder::GoalBuilder, rust_ir::*, solve::Solver, split::Split, RustIrDatabase,
 };
 use chalk_ir::{
-    cast::*,
-    fold::shift::Shift,
-    interner::Interner,
-    visit::{Traverse, Visitor},
-    *,
+    cast::*, fold::shift::Shift, interner::Interner, traverse::Traverse, visit::Visitor, *,
 };
 use tracing::debug;
 
@@ -62,7 +58,7 @@ impl<I: Interner> InputTypeCollector<I> {
         }
     }
 
-    fn types_in(interner: I, value: impl Traverse<I>) -> Vec<Ty<I>> {
+    fn types_in(interner: I, value: &impl Traverse<I>) -> Vec<Ty<I>> {
         let mut collector = Self::new(interner);
         value.visit_with(&mut collector, DebruijnIndex::INNERMOST);
         collector.types
@@ -283,7 +279,7 @@ where
                                 // WellFormed(Vec<T>), for each field type `Vec<T>` or type that appears in the where clauses
                                 let types = InputTypeCollector::types_in(
                                     gb.interner(),
-                                    (&fields, &where_clauses),
+                                    &(fields, where_clauses),
                                 );
 
                                 types
@@ -627,7 +623,7 @@ fn compute_assoc_ty_goal<I: Interner>(
                         .cloned()
                         .map(|qwc| qwc.into_from_env_goal(interner)),
                     |gb| {
-                        let types = InputTypeCollector::types_in(gb.interner(), value_ty);
+                        let types = InputTypeCollector::types_in(gb.interner(), *value_ty);
 
                         // We require that `WellFormed(T)` for each type that appears in the value
                         let wf_goals = types

@@ -8,7 +8,8 @@ use crate::{Interner, RustIrDatabase, TraitRef, WellKnownTrait};
 use chalk_ir::{
     cast::Cast,
     interner::HasInterner,
-    visit::{SuperTraverse, Traverse, Visitor},
+    traverse::{SuperTraverse, Traverse},
+    visit::Visitor,
     Binders, Const, ConstValue, DebruijnIndex, DomainGoal, DynTy, EqGoal, Goal, LifetimeOutlives,
     QuantifiedWhereClauses, Substitution, TraitId, Ty, TyKind, TypeOutlives, WhereClause,
 };
@@ -58,10 +59,12 @@ impl<I: Interner> Visitor<I> for UnsizeParameterCollector<I> {
     }
 }
 
-fn outer_binder_parameters_used<I: Interner>(
-    interner: I,
-    v: &Binders<impl Traverse<I> + HasInterner>,
-) -> HashSet<usize> {
+fn outer_binder_parameters_used<I, T>(interner: I, v: &Binders<T>) -> HashSet<usize>
+where
+    I: Interner,
+    T: Traverse<I> + HasInterner<Interner = I>,
+    T::Result: HasInterner<Interner = I>,
+{
     let mut visitor = UnsizeParameterCollector {
         interner,
         parameters: HashSet::new(),
@@ -122,11 +125,12 @@ impl<'p, I: Interner> Visitor<I> for ParameterOccurenceCheck<'p, I> {
     }
 }
 
-fn uses_outer_binder_params<I: Interner>(
-    interner: I,
-    v: &Binders<impl Traverse<I> + HasInterner>,
-    parameters: &HashSet<usize>,
-) -> bool {
+fn uses_outer_binder_params<I, T>(interner: I, v: &Binders<T>, parameters: &HashSet<usize>) -> bool
+where
+    I: Interner,
+    T: Traverse<I> + HasInterner<Interner = I>,
+    T::Result: HasInterner<Interner = I>,
+{
     let mut visitor = ParameterOccurenceCheck {
         interner,
         parameters,

@@ -1,7 +1,8 @@
 use crate::debug_span;
-use chalk_ir::fold::{Folder, Traverse};
+use chalk_ir::fold::Folder;
 use chalk_ir::interner::{HasInterner, Interner};
-use chalk_ir::visit::{Traverse, Visitor};
+use chalk_ir::traverse::Traverse;
+use chalk_ir::visit::Visitor;
 use chalk_ir::*;
 use std::ops::ControlFlow;
 

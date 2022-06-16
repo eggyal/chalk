@@ -4,7 +4,7 @@ use chalk_ir::cast::Cast;
 use chalk_ir::cast::Caster;
 use chalk_ir::*;
 use fold::shift::Shift;
-use fold::Traverse;
+use traverse::Traverse;
 use interner::{HasInterner, Interner};
 
 pub struct GoalBuilder<'i, I: Interner> {
