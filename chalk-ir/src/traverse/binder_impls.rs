@@ -1,8 +1,9 @@
-//! This module contains impls of `Fold` for those types that
+//! This module contains impls of `Traverse` for those types that
 //! introduce binders.
 //!
-//! The more interesting impls of `Fold` remain in the `fold` module.
+//! The more interesting impls of `Traverse` remain in the `traverse` module.
 
+use crate::interner::HasInterner;
 use crate::*;
 
 impl<I: Interner> Traverse<I> for FnPointer<I> {
@@ -26,6 +27,14 @@ impl<I: Interner> Traverse<I> for FnPointer<I> {
                 variadic: sig.variadic,
             },
         })
+    }
+    fn visit_with<B>(
+        &self,
+        visitor: &mut dyn Visitor<I, BreakTy = B>,
+        outer_binder: DebruijnIndex,
+    ) -> ControlFlow<B> {
+        self.substitution
+            .visit_with(visitor, outer_binder.shifted_in())
     }
 }
 
@@ -51,6 +60,13 @@ where
         };
         Ok(Binders::new(binders, value))
     }
+    fn visit_with<B>(
+        &self,
+        visitor: &mut dyn Visitor<I, BreakTy = B>,
+        outer_binder: DebruijnIndex,
+    ) -> ControlFlow<B> {
+        self.value.visit_with(visitor, outer_binder.shifted_in())
+    }
 }
 
 impl<I, T> Traverse<I> for Canonical<T>
@@ -74,5 +90,12 @@ where
             interned: self_binders.interned().clone(),
         };
         Ok(Canonical { binders, value })
+    }
+    fn visit_with<B>(
+        &self,
+        visitor: &mut dyn Visitor<I, BreakTy = B>,
+        outer_binder: DebruijnIndex,
+    ) -> ControlFlow<B> {
+        self.value.visit_with(visitor, outer_binder.shifted_in())
     }
 }

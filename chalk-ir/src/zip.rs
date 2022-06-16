@@ -1,6 +1,6 @@
 //! Traits for "zipping" types, walking through two structures and checking that they match.
 
-use crate::fold::Traverse;
+use crate::traverse::Traverse;
 use crate::*;
 use std::fmt::Debug;
 use std::sync::Arc;

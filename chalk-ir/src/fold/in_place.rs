@@ -12,7 +12,7 @@ fn is_layout_identical<T, U>() -> bool {
 }
 
 /// Maps a `Box<T>` to a `Box<U>`, reusing the underlying storage if possible.
-pub(super) fn fallible_map_box<T, U, E>(
+pub(crate) fn fallible_map_box<T, U, E>(
     b: Box<T>,
     map: impl FnOnce(T) -> Result<U, E>,
 ) -> Result<Box<U>, E> {
@@ -41,7 +41,7 @@ pub(super) fn fallible_map_box<T, U, E>(
 }
 
 /// Maps a `Vec<T>` to a `Vec<U>`, reusing the underlying storage if possible.
-pub(super) fn fallible_map_vec<T, U, E>(
+pub(crate) fn fallible_map_vec<T, U, E>(
     vec: Vec<T>,
     mut map: impl FnMut(T) -> Result<U, E>,
 ) -> Result<Vec<U>, E> {
