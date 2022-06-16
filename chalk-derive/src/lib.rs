@@ -118,9 +118,8 @@ enum DeriveKind {
 }
 
 decl_derive!([HasInterner, attributes(has_interner)] => derive_has_interner);
-decl_derive!([Visit, attributes(has_interner)] => derive_visit);
-decl_derive!([SuperVisit, attributes(has_interner)] => derive_super_visit);
-decl_derive!([Fold, attributes(has_interner)] => derive_fold);
+decl_derive!([Traverse, attributes(has_interner)] => derive_traverse);
+decl_derive!([SuperTraverse, attributes(has_interner)] => derive_super_traverse);
 decl_derive!([Zip, attributes(has_interner)] => derive_zip);
 
 fn derive_has_interner(mut s: synstructure::Structure) -> TokenStream {
@@ -136,54 +135,124 @@ fn derive_has_interner(mut s: synstructure::Structure) -> TokenStream {
     )
 }
 
-/// Derives Visit for structs and enums for which one of the following is true:
+/// Derives Traverse for structs and enums for which one of the following is true:
 /// - It has a `#[has_interner(TheInterner)]` attribute
 /// - There is a single parameter `T: HasInterner` (does not have to be named `T`)
 /// - There is a single parameter `I: Interner` (does not have to be named `I`)
-fn derive_visit(s: synstructure::Structure) -> TokenStream {
-    derive_any_visit(s, parse_quote! { Visit }, parse_quote! { visit_with })
-}
-
-/// Same as Visit, but derives SuperVisit instead
-fn derive_super_visit(s: synstructure::Structure) -> TokenStream {
-    derive_any_visit(
-        s,
-        parse_quote! { SuperVisit },
-        parse_quote! { super_visit_with },
-    )
-}
-
-fn derive_any_visit(
-    mut s: synstructure::Structure,
-    trait_name: Ident,
-    method_name: Ident,
-) -> TokenStream {
+fn derive_traverse(mut s: synstructure::Structure) -> TokenStream {
     s.underscore_const(true);
-    let input = s.ast();
+    s.bind_with(|_| synstructure::BindStyle::Move);
+
     let (interner, kind) = find_interner(&mut s);
 
-    let body = s.each(|bi| {
+    let fold_body = s.each_variant(|vi| {
+        let bindings = vi.bindings();
+        vi.construct(|_, index| {
+            let bind = &bindings[index];
+            quote! {
+                ::chalk_ir::traverse::Traverse::fold_with(#bind, folder, outer_binder)?
+            }
+        })
+    });
+    let visit_body = s.each(|bi| {
         quote! {
-            ::chalk_ir::try_break!(::chalk_ir::visit::Visit::visit_with(#bi, visitor, outer_binder));
+            ::chalk_ir::try_break!(::chalk_ir::traverse::Traverse::visit_with(#bi, visitor, outer_binder));
         }
     });
 
-    if kind == DeriveKind::FromHasInterner {
+    let input = s.ast();
+    let type_name = &input.ident;
+
+    let result = if kind == DeriveKind::FromHasInterner {
         let param = get_generic_param_name(input).unwrap();
-        s.add_where_predicate(parse_quote! { #param: ::chalk_ir::visit::Visit<#interner> });
-    }
+        s.add_impl_generic(parse_quote! { _U })
+            .add_where_predicate(
+                parse_quote! { #param: ::chalk_ir::traverse::Traverse<#interner, Result = _U> },
+            )
+            .add_where_predicate(
+                parse_quote! { _U: ::chalk_ir::interner::HasInterner<Interner = #interner> },
+            );
+        quote! { #type_name <_U> }
+    } else {
+        quote! { #type_name < #interner > }
+    };
 
     s.add_bounds(synstructure::AddBounds::None);
     s.bound_impl(
-        quote!(::chalk_ir::visit:: #trait_name <#interner>),
+        quote!(::chalk_ir::traverse::Traverse<#interner>),
         quote! {
-            fn #method_name <B>(
+            type Result = #result;
+
+            fn fold_with<E>(
+                self,
+                folder: &mut dyn ::chalk_ir::fold::Folder < #interner, Error = E >,
+                outer_binder: ::chalk_ir::DebruijnIndex,
+            ) -> ::std::result::Result<Self::Result, E> {
+                Ok(match self { #fold_body })
+            }
+
+            fn visit_with<B>(
                 &self,
                 visitor: &mut dyn ::chalk_ir::visit::Visitor < #interner, BreakTy = B >,
                 outer_binder: ::chalk_ir::DebruijnIndex,
             ) -> std::ops::ControlFlow<B> {
-                match *self {
-                    #body
+                match self {
+                    #visit_body
+                }
+                std::ops::ControlFlow::Continue(())
+            }
+        },
+    )
+}
+
+/// Same as Traverse, but derives SuperTraverse instead
+fn derive_super_traverse(mut s: synstructure::Structure) -> TokenStream {
+    s.underscore_const(true);
+    s.bind_with(|_| synstructure::BindStyle::Move);
+
+    let (interner, kind) = find_interner(&mut s);
+
+    let fold_body = s.each_variant(|vi| {
+        let bindings = vi.bindings();
+        vi.construct(|_, index| {
+            let bind = &bindings[index];
+            quote! {
+                ::chalk_ir::traverse::Traverse::fold_with(#bind, folder, outer_binder)?
+            }
+        })
+    });
+    let visit_body = s.each(|bi| {
+        quote! {
+            ::chalk_ir::try_break!(::chalk_ir::traverse::Traverse::visit_with(#bi, visitor, outer_binder));
+        }
+    });
+
+    let input = s.ast();
+
+    if kind == DeriveKind::FromHasInterner {
+        let param = get_generic_param_name(input).unwrap();
+        s.add_where_predicate(parse_quote! { #param: ::chalk_ir::traverse::Traverse<#interner> });
+    }
+
+    s.add_bounds(synstructure::AddBounds::None);
+    s.bound_impl(
+        quote!(::chalk_ir::traverse::SuperTraverse<#interner>),
+        quote! {
+            fn super_fold_with<E>(
+                self,
+                folder: &mut dyn ::chalk_ir::fold::Folder < #interner, Error = E >,
+                outer_binder: ::chalk_ir::DebruijnIndex,
+            ) -> ::std::result::Result<Self::Result, E> {
+                Ok(match self { #fold_body })
+            }
+
+            fn super_visit_with<B>(
+                &self,
+                visitor: &mut dyn ::chalk_ir::visit::Visitor < #interner, BreakTy = B >,
+                outer_binder: ::chalk_ir::DebruijnIndex,
+            ) -> std::ops::ControlFlow<B> {
+                match self {
+                    #visit_body
                 }
                 std::ops::ControlFlow::Continue(())
             }
@@ -246,60 +315,6 @@ fn derive_zip(mut s: synstructure::Structure) -> TokenStream {
             ) -> ::chalk_ir::Fallible<()> {
                     match (a, b) { #body }
                 }
-        },
-    )
-}
-
-/// Derives Fold for structs and enums for which one of the following is true:
-/// - It has a `#[has_interner(TheInterner)]` attribute
-/// - There is a single parameter `T: HasInterner` (does not have to be named `T`)
-/// - There is a single parameter `I: Interner` (does not have to be named `I`)
-fn derive_fold(mut s: synstructure::Structure) -> TokenStream {
-    s.underscore_const(true);
-    s.bind_with(|_| synstructure::BindStyle::Move);
-
-    let (interner, kind) = find_interner(&mut s);
-
-    let body = s.each_variant(|vi| {
-        let bindings = vi.bindings();
-        vi.construct(|_, index| {
-            let bind = &bindings[index];
-            quote! {
-                ::chalk_ir::fold::Fold::fold_with(#bind, folder, outer_binder)?
-            }
-        })
-    });
-
-    let input = s.ast();
-    let type_name = &input.ident;
-
-    let result = if kind == DeriveKind::FromHasInterner {
-        let param = get_generic_param_name(input).unwrap();
-        s.add_impl_generic(parse_quote! { _U })
-            .add_where_predicate(
-                parse_quote! { #param: ::chalk_ir::fold::Fold<#interner, Result = _U> },
-            )
-            .add_where_predicate(
-                parse_quote! { _U: ::chalk_ir::interner::HasInterner<Interner = #interner> },
-            );
-        quote! { #type_name <_U> }
-    } else {
-        quote! { #type_name < #interner > }
-    };
-
-    s.add_bounds(synstructure::AddBounds::None);
-    s.bound_impl(
-        quote!(::chalk_ir::fold::Fold<#interner>),
-        quote! {
-            type Result = #result;
-
-            fn fold_with<E>(
-                self,
-                folder: &mut dyn ::chalk_ir::fold::Folder < #interner, Error = E >,
-                outer_binder: ::chalk_ir::DebruijnIndex,
-            ) -> ::std::result::Result<Self::Result, E> {
-                Ok(match self { #body })
-            }
         },
     )
 }

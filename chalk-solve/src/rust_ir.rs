@@ -52,7 +52,7 @@ impl<I: Interner> ImplDatum<I> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, HasInterner, Fold, Visit)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, HasInterner, Traverse)]
 pub struct ImplDatumBound<I: Interner> {
     pub trait_ref: TraitRef<I>,
     pub where_clauses: Vec<QuantifiedWhereClause<I>>,
@@ -351,7 +351,7 @@ pub struct TraitFlags {
 chalk_ir::const_visit!(TraitFlags);
 
 /// An inline bound, e.g. `: Foo<K>` in `impl<K, T: Foo<K>> SomeType<T>`.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub enum InlineBound<I: Interner> {
     TraitBound(TraitBound<I>),
     AliasEqBound(AliasEqBound<I>),
@@ -395,7 +395,7 @@ impl<I: Interner> IntoWhereClauses<I> for QuantifiedInlineBound<I> {
 
 /// Represents a trait bound on e.g. a type or type parameter.
 /// Does not know anything about what it's binding.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse)]
 pub struct TraitBound<I: Interner> {
     pub trait_id: TraitId<I>,
     pub args_no_self: Vec<GenericArg<I>>,
@@ -420,7 +420,7 @@ impl<I: Interner> TraitBound<I> {
 
 /// Represents an alias equality bound on e.g. a type or type parameter.
 /// Does not know anything about what it's binding.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse)]
 pub struct AliasEqBound<I: Interner> {
     pub trait_bound: TraitBound<I>,
     pub associated_ty_id: AssocTypeId<I>,
@@ -518,7 +518,7 @@ impl<I: Interner> Traverse<I> for AssociatedTyDatum<I> {
 
 /// Encodes the parts of `AssociatedTyDatum` where the parameters
 /// `P0..Pm` are in scope (`bounds` and `where_clauses`).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct AssociatedTyDatumBound<I: Interner> {
     /// Bounds on the associated type itself.
     ///
@@ -580,7 +580,7 @@ impl<I: Interner> AssociatedTyDatum<I> {
 ///     type Item = XXX; // <-- represents this line!
 /// }
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse)]
 pub struct AssociatedTyValue<I: Interner> {
     /// Impl in which this associated type value is found.  You might
     /// need to look at this to find the generic parameters defined on
@@ -619,7 +619,7 @@ pub struct AssociatedTyValue<I: Interner> {
     pub value: Binders<AssociatedTyValueBound<I>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct AssociatedTyValueBound<I: Interner> {
     /// Type that we normalize to. The X in `type Foo<'a> = X`.
     pub ty: Ty<I>,
@@ -630,7 +630,7 @@ pub struct AssociatedTyValueBound<I: Interner> {
 /// ```ignore
 /// opaque type T: A + B = HiddenTy;
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse)]
 pub struct OpaqueTyDatum<I: Interner> {
     /// The placeholder `!T` that corresponds to the opaque type `T`.
     pub opaque_ty_id: OpaqueTyId<I>,

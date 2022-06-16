@@ -9,8 +9,9 @@ extern crate self as chalk_ir;
 use crate::cast::{Cast, CastTo, Caster};
 use crate::fold::shift::Shift;
 use crate::fold::{Folder, Subst};
-use crate::visit::{VisitExt, Visitor};
 use crate::traverse::{SuperTraverse, Traverse};
+use crate::visit::{VisitExt, Visitor};
+use chalk_derive::{HasInterner, SuperTraverse, Traverse, Zip};
 use std::marker::PhantomData;
 use std::ops::ControlFlow;
 
@@ -149,7 +150,7 @@ impl Variance {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner)]
 /// The set of assumptions we've made so far, and the current number of
 /// universal (forall) quantifiers we're within.
 pub struct Environment<I: Interner> {
@@ -199,7 +200,7 @@ impl<I: Interner> Environment<I> {
 }
 
 /// A goal with an environment to solve it in.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse)]
 #[allow(missing_docs)]
 pub struct InEnvironment<G: HasInterner> {
     pub environment: Environment<G::Interner>,
@@ -1023,7 +1024,7 @@ impl DebruijnIndex {
 /// known. It is referenced within the type using `^1.0`, indicating
 /// a bound type with debruijn index 1 (i.e., skipping through one
 /// level of binder).
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct DynTy<I: Interner> {
     /// The unknown self type.
     pub bounds: Binders<QuantifiedWhereClauses<I>>,
@@ -1086,7 +1087,7 @@ pub struct FnSig<I: Interner> {
     pub variadic: bool,
 }
 /// A wrapper for the substs on a Fn.
-#[derive(Clone, PartialEq, Eq, Hash, HasInterner, Fold, Visit)]
+#[derive(Clone, PartialEq, Eq, Hash, HasInterner, Traverse)]
 pub struct FnSubst<I: Interner>(pub Substitution<I>);
 
 impl<I: Interner> Copy for FnSubst<I> where I::InternedSubstitution: Copy {}
@@ -1518,7 +1519,7 @@ impl<I: Interner> GenericArg<I> {
 }
 
 /// Generic arguments data.
-#[derive(Clone, PartialEq, Eq, Hash, Visit, Fold, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, Zip)]
 pub enum GenericArgData<I: Interner> {
     /// Type argument
     Ty(Ty<I>),
@@ -1603,7 +1604,7 @@ impl<I: Interner, T> WithKind<I, T> {
 pub type CanonicalVarKind<I: Interner> = WithKind<I, UniverseIndex>;
 
 /// An alias, which is a trait indirection such as a projection or opaque type.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 pub enum AliasTy<I: Interner> {
     /// An associated type projection.
     Projection(ProjectionTy<I>),
@@ -1633,7 +1634,7 @@ impl<I: Interner> AliasTy<I> {
 }
 
 /// A projection `<P0 as TraitName<P1..Pn>>::AssocItem<Pn+1..Pm>`.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct ProjectionTy<I: Interner> {
     /// The id for the associated type member.
     pub associated_ty_id: AssocTypeId<I>,
@@ -1655,7 +1656,7 @@ impl<I: Interner> ProjectionTy<I> {
 }
 
 /// An opaque type `opaque type T<..>: Trait = HiddenTy`.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct OpaqueTy<I: Interner> {
     /// The id for the opaque type.
     pub opaque_ty_id: OpaqueTyId<I>,
@@ -1671,7 +1672,7 @@ impl<I: Interner> Copy for OpaqueTy<I> where I::InternedSubstitution: Copy {}
 ///   implements the trait.
 /// - `<P0 as Trait<P1..Pn>>` (e.g. `i32 as Copy`), which casts the type to
 ///   that specific trait.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct TraitRef<I: Interner> {
     /// The trait id.
     pub trait_id: TraitId<I>,
@@ -1708,7 +1709,7 @@ impl<I: Interner> TraitRef<I> {
 
 /// Lifetime outlives, which for `'a: 'b`` checks that the lifetime `'a`
 /// is a superset of the value of `'b`.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 #[allow(missing_docs)]
 pub struct LifetimeOutlives<I: Interner> {
     pub a: Lifetime<I>,
@@ -1719,7 +1720,7 @@ impl<I: Interner> Copy for LifetimeOutlives<I> where I::InternedLifetime: Copy {
 
 /// Type outlives, which for `T: 'a` checks that the type `T`
 /// lives at least as long as the lifetime `'a`
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 pub struct TypeOutlives<I: Interner> {
     /// The type which must outlive the given lifetime.
     pub ty: Ty<I>,
@@ -1735,7 +1736,7 @@ where
 }
 
 /// Where clauses that can be written by a Rust programmer.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, SuperVisit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, SuperTraverse, HasInterner, Zip)]
 pub enum WhereClause<I: Interner> {
     /// Type implements a trait.
     Implemented(TraitRef<I>),
@@ -1756,7 +1757,7 @@ where
 }
 
 /// Checks whether a type or trait ref is well-formed.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 pub enum WellFormed<I: Interner> {
     /// A predicate which is true when some trait ref is well-formed.
     /// For example, given the following trait definitions:
@@ -1794,7 +1795,7 @@ where
 }
 
 /// Checks whether a type or trait ref can be derived from the contents of the environment.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 pub enum FromEnv<I: Interner> {
     /// A predicate which enables deriving everything which should be true if we *know* that
     /// some trait ref is well-formed. For example given the above trait definitions, we can use
@@ -1833,7 +1834,7 @@ where
 /// A "domain goal" is a goal that is directly about Rust, rather than a pure
 /// logical statement. As much as possible, the Chalk solver should avoid
 /// decomposing this enum, and instead treat its values opaquely.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, SuperVisit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, SuperTraverse, HasInterner, Zip)]
 pub enum DomainGoal<I: Interner> {
     /// Simple goal that is true if the where clause is true.
     Holds(WhereClause<I>),
@@ -1992,7 +1993,7 @@ impl<I: Interner> DomainGoal<I> {
 }
 
 /// Equality goal: tries to prove that two values are equal.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, Zip)]
 #[allow(missing_docs)]
 pub struct EqGoal<I: Interner> {
     pub a: GenericArg<I>,
@@ -2002,7 +2003,7 @@ pub struct EqGoal<I: Interner> {
 impl<I: Interner> Copy for EqGoal<I> where I::InternedGenericArg: Copy {}
 
 /// Subtype goal: tries to prove that `a` is a subtype of `b`
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, Zip)]
 #[allow(missing_docs)]
 pub struct SubtypeGoal<I: Interner> {
     pub a: Ty<I>,
@@ -2015,7 +2016,7 @@ impl<I: Interner> Copy for SubtypeGoal<I> where I::InternedType: Copy {}
 /// type. A projection `T::Foo` normalizes to the type `U` if we can
 /// **match it to an impl** and that impl has a `type Foo = V` where
 /// `U = V`.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, Zip)]
 #[allow(missing_docs)]
 pub struct Normalize<I: Interner> {
     pub alias: AliasTy<I>,
@@ -2030,7 +2031,7 @@ where
 }
 
 /// Proves **equality** between an alias and a type.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, Zip)]
 #[allow(missing_docs)]
 pub struct AliasEq<I: Interner> {
     pub alias: AliasTy<I>,
@@ -2293,7 +2294,7 @@ where
 /// Represents one clause of the form `consequence :- conditions` where
 /// `conditions = cond_1 && cond_2 && ...` is the conjunction of the individual
 /// conditions.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 pub struct ProgramClauseImplication<I: Interner> {
     /// The consequence of the clause, which holds if the conditions holds.
     pub consequence: DomainGoal<I>,
@@ -2329,7 +2330,7 @@ impl std::ops::BitAnd for ClausePriority {
 }
 
 /// Contains the data for a program clause.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 pub struct ProgramClauseData<I: Interner>(pub Binders<ProgramClauseImplication<I>>);
 
 impl<I: Interner> ProgramClauseImplication<I> {
@@ -2573,7 +2574,7 @@ where
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 /// A general goal; this is the full range of questions you can pose to Chalk.
 pub enum GoalData<I: Interner> {
     /// Introduces a binding at depth 0, shifting other bindings up
@@ -2656,7 +2657,7 @@ pub enum QuantifierKind {
 /// lifetime constraints, instead gathering them up to return with our solution
 /// for later checking. This allows for decoupling between type and region
 /// checking in the compiler.
-#[derive(Clone, PartialEq, Eq, Hash, Fold, Visit, HasInterner, Zip)]
+#[derive(Clone, PartialEq, Eq, Hash, Traverse, HasInterner, Zip)]
 pub enum Constraint<I: Interner> {
     /// Outlives constraint `'a: 'b`, indicating that the value of `'a` must be
     /// a superset of the value of `'b`.
@@ -3039,7 +3040,7 @@ impl<I: Interner> Variances<I> {
 /// substitution stores the values for the query's unknown variables,
 /// and the constraints represents any region constraints that must
 /// additionally be solved.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct ConstrainedSubst<I: Interner> {
     /// The substitution that is being constrained.
     ///
@@ -3051,7 +3052,7 @@ pub struct ConstrainedSubst<I: Interner> {
 }
 
 /// The resulting substitution after solving a goal.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Fold, Visit, HasInterner)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Traverse, HasInterner)]
 pub struct AnswerSubst<I: Interner> {
     /// The substitution result.
     ///
