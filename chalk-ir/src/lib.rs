@@ -8,7 +8,7 @@ extern crate self as chalk_ir;
 
 use crate::cast::{Cast, CastTo, Caster};
 use crate::fold::shift::Shift;
-use crate::fold::{Fold, Folder, Subst, SuperFold};
+use crate::fold::{Folder, Subst, SuperTraverse, Traverse};
 use crate::visit::{SuperVisit, Visit, VisitExt, Visitor};
 use chalk_derive::{Fold, HasInterner, SuperVisit, Visit, Zip};
 use std::marker::PhantomData;
@@ -2197,7 +2197,7 @@ impl<T: HasInterner> Binders<T> {
 
 impl<T, I> Binders<Binders<T>>
 where
-    T: Fold<I> + HasInterner<Interner = I>,
+    T: Traverse<I> + HasInterner<Interner = I>,
     T::Result: HasInterner<Interner = I>,
     I: Interner,
 {
@@ -2233,7 +2233,7 @@ impl<T: HasInterner> From<Binders<T>> for (VariableKinds<T::Interner>, T) {
 
 impl<T, I> Binders<T>
 where
-    T: Fold<I> + HasInterner<Interner = I>,
+    T: Traverse<I> + HasInterner<Interner = I>,
     I: Interner,
 {
     /// Substitute `parameters` for the variables introduced by these
@@ -2708,7 +2708,7 @@ impl<I: Interner> Substitution<I> {
     /// Apply the substitution to a value.
     pub fn apply<T>(&self, value: T, interner: I) -> T::Result
     where
-        T: Fold<I>,
+        T: Traverse<I>,
     {
         Substitute::apply(self, value, interner)
     }
@@ -2787,13 +2787,13 @@ where
 /// that it can applied as a substituion to a value
 pub trait Substitute<I: Interner>: AsParameters<I> {
     /// Apply the substitution to a value.
-    fn apply<T: Fold<I>>(&self, value: T, interner: I) -> T::Result;
+    fn apply<T: Traverse<I>>(&self, value: T, interner: I) -> T::Result;
 }
 
 impl<I: Interner, A: AsParameters<I>> Substitute<I> for A {
     fn apply<T>(&self, value: T, interner: I) -> T::Result
     where
-        T: Fold<I>,
+        T: Traverse<I>,
     {
         value
             .fold_with(

@@ -8,7 +8,7 @@ use super::in_place;
 use crate::*;
 use std::marker::PhantomData;
 
-impl<T: Fold<I>, I: Interner> Fold<I> for Vec<T> {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for Vec<T> {
     type Result = Vec<T::Result>;
     fn fold_with<E>(
         self,
@@ -19,7 +19,7 @@ impl<T: Fold<I>, I: Interner> Fold<I> for Vec<T> {
     }
 }
 
-impl<T: Fold<I>, I: Interner> Fold<I> for Box<T> {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for Box<T> {
     type Result = Box<T::Result>;
     fn fold_with<E>(
         self,
@@ -49,7 +49,7 @@ tuple_fold!(A, B, C);
 tuple_fold!(A, B, C, D);
 tuple_fold!(A, B, C, D, E);
 
-impl<T: Fold<I>, I: Interner> Fold<I> for Option<T> {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for Option<T> {
     type Result = Option<T::Result>;
     fn fold_with<E>(
         self,
@@ -63,7 +63,7 @@ impl<T: Fold<I>, I: Interner> Fold<I> for Option<T> {
     }
 }
 
-impl<I: Interner> Fold<I> for GenericArg<I> {
+impl<I: Interner> Traverse<I> for GenericArg<I> {
     type Result = GenericArg<I>;
     fn fold_with<E>(
         self,
@@ -80,7 +80,7 @@ impl<I: Interner> Fold<I> for GenericArg<I> {
     }
 }
 
-impl<I: Interner> Fold<I> for Substitution<I> {
+impl<I: Interner> Traverse<I> for Substitution<I> {
     type Result = Substitution<I>;
     fn fold_with<E>(
         self,
@@ -97,7 +97,7 @@ impl<I: Interner> Fold<I> for Substitution<I> {
     }
 }
 
-impl<I: Interner> Fold<I> for Goals<I> {
+impl<I: Interner> Traverse<I> for Goals<I> {
     type Result = Goals<I>;
     fn fold_with<E>(
         self,
@@ -113,7 +113,7 @@ impl<I: Interner> Fold<I> for Goals<I> {
     }
 }
 
-impl<I: Interner> Fold<I> for ProgramClauses<I> {
+impl<I: Interner> Traverse<I> for ProgramClauses<I> {
     type Result = ProgramClauses<I>;
     fn fold_with<E>(
         self,
@@ -129,7 +129,7 @@ impl<I: Interner> Fold<I> for ProgramClauses<I> {
     }
 }
 
-impl<I: Interner> Fold<I> for QuantifiedWhereClauses<I> {
+impl<I: Interner> Traverse<I> for QuantifiedWhereClauses<I> {
     type Result = QuantifiedWhereClauses<I>;
     fn fold_with<E>(
         self,
@@ -145,7 +145,7 @@ impl<I: Interner> Fold<I> for QuantifiedWhereClauses<I> {
     }
 }
 
-impl<I: Interner> Fold<I> for Constraints<I> {
+impl<I: Interner> Traverse<I> for Constraints<I> {
     type Result = Constraints<I>;
     fn fold_with<E>(
         self,
@@ -220,7 +220,7 @@ id_fold!(ClosureId);
 id_fold!(GeneratorId);
 id_fold!(ForeignDefId);
 
-impl<I: Interner> SuperFold<I> for ProgramClauseData<I> {
+impl<I: Interner> SuperTraverse<I> for ProgramClauseData<I> {
     fn super_fold_with<E>(
         self,
         folder: &mut dyn Folder<I, Error = E>,
@@ -230,7 +230,7 @@ impl<I: Interner> SuperFold<I> for ProgramClauseData<I> {
     }
 }
 
-impl<I: Interner> SuperFold<I> for ProgramClause<I> {
+impl<I: Interner> SuperTraverse<I> for ProgramClause<I> {
     fn super_fold_with<E>(
         self,
         folder: &mut dyn Folder<I, Error = E>,
@@ -243,7 +243,7 @@ impl<I: Interner> SuperFold<I> for ProgramClause<I> {
     }
 }
 
-impl<I: Interner> Fold<I> for PhantomData<I> {
+impl<I: Interner> Traverse<I> for PhantomData<I> {
     type Result = PhantomData<I>;
 
     fn fold_with<E>(

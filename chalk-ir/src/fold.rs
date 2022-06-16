@@ -310,7 +310,7 @@ pub trait Folder<I: Interner> {
 /// the source type, but in some cases we convert from borrowed
 /// to owned as well (e.g., the folder for `&T` will fold to a fresh
 /// `T`; well, actually `T::Result`).
-pub trait Fold<I: Interner>: Debug {
+pub trait Traverse<I: Interner>: Debug {
     /// The type of value that will be produced once folding is done.
     /// Typically this is `Self`, unless `Self` contains borrowed
     /// values, in which case owned values are produced (for example,
@@ -333,7 +333,7 @@ pub trait Fold<I: Interner>: Debug {
 /// For types where "fold" invokes a callback on the `Folder`, the
 /// `SuperFold` trait captures the recursive behavior that folds all
 /// the contents of the type.
-pub trait SuperFold<I: Interner>: Fold<I> {
+pub trait SuperTraverse<I: Interner>: Traverse<I> {
     /// Recursively folds the value.
     fn super_fold_with<E>(
         self,
@@ -345,7 +345,7 @@ pub trait SuperFold<I: Interner>: Fold<I> {
 /// "Folding" a type invokes the `fold_ty` method on the folder; this
 /// usually (in turn) invokes `super_fold_ty` to fold the individual
 /// parts.
-impl<I: Interner> Fold<I> for Ty<I> {
+impl<I: Interner> Traverse<I> for Ty<I> {
     type Result = Ty<I>;
 
     fn fold_with<E>(
@@ -358,7 +358,7 @@ impl<I: Interner> Fold<I> for Ty<I> {
 }
 
 /// "Super fold" for a type invokes te more detailed callbacks on the type
-impl<I> SuperFold<I> for Ty<I>
+impl<I> SuperTraverse<I> for Ty<I>
 where
     I: Interner,
 {
@@ -469,7 +469,7 @@ where
 /// "Folding" a lifetime invokes the `fold_lifetime` method on the folder; this
 /// usually (in turn) invokes `super_fold_lifetime` to fold the individual
 /// parts.
-impl<I: Interner> Fold<I> for Lifetime<I> {
+impl<I: Interner> Traverse<I> for Lifetime<I> {
     type Result = Lifetime<I>;
 
     fn fold_with<E>(
@@ -481,7 +481,7 @@ impl<I: Interner> Fold<I> for Lifetime<I> {
     }
 }
 
-impl<I> SuperFold<I> for Lifetime<I>
+impl<I> SuperTraverse<I> for Lifetime<I>
 where
     I: Interner,
 {
@@ -521,7 +521,7 @@ where
 /// "Folding" a const invokes the `fold_const` method on the folder; this
 /// usually (in turn) invokes `super_fold_const` to fold the individual
 /// parts.
-impl<I: Interner> Fold<I> for Const<I> {
+impl<I: Interner> Traverse<I> for Const<I> {
     type Result = Const<I>;
 
     fn fold_with<E>(
@@ -533,7 +533,7 @@ impl<I: Interner> Fold<I> for Const<I> {
     }
 }
 
-impl<I> SuperFold<I> for Const<I>
+impl<I> SuperTraverse<I> for Const<I>
 where
     I: Interner,
 {
@@ -572,7 +572,7 @@ where
 
 /// Folding a goal invokes the `fold_goal` callback (which will, by
 /// default, invoke super-fold).
-impl<I: Interner> Fold<I> for Goal<I> {
+impl<I: Interner> Traverse<I> for Goal<I> {
     type Result = Goal<I>;
 
     fn fold_with<E>(
@@ -585,7 +585,7 @@ impl<I: Interner> Fold<I> for Goal<I> {
 }
 
 /// Superfold folds recursively.
-impl<I: Interner> SuperFold<I> for Goal<I> {
+impl<I: Interner> SuperTraverse<I> for Goal<I> {
     fn super_fold_with<E>(
         self,
         folder: &mut dyn Folder<I, Error = E>,
@@ -604,7 +604,7 @@ impl<I: Interner> SuperFold<I> for Goal<I> {
 /// Folding a program clause invokes the `fold_program_clause`
 /// callback on the folder (which will, by default, invoke the
 /// `super_fold_with` method on the program clause).
-impl<I: Interner> Fold<I> for ProgramClause<I> {
+impl<I: Interner> Traverse<I> for ProgramClause<I> {
     type Result = ProgramClause<I>;
 
     fn fold_with<E>(
