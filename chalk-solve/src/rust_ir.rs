@@ -7,8 +7,8 @@ use chalk_ir::cast::Cast;
 use chalk_ir::fold::shift::Shift;
 use chalk_ir::interner::Interner;
 use chalk_ir::{
-    try_break, visit::Visit, AdtId, AliasEq, AliasTy, AssocTypeId, Binders, DebruijnIndex, FnDefId,
-    GenericArg, ImplId, OpaqueTyId, ProjectionTy, QuantifiedWhereClause, Substitution,
+    try_break, visit::Traverse, AdtId, AliasEq, AliasTy, AssocTypeId, Binders, DebruijnIndex,
+    FnDefId, GenericArg, ImplId, OpaqueTyId, ProjectionTy, QuantifiedWhereClause, Substitution,
     ToGenericArg, TraitId, TraitRef, Ty, TyKind, VariableKind, WhereClause, WithKind,
 };
 use std::iter;
@@ -157,7 +157,7 @@ pub struct FnDefDatum<I: Interner> {
 }
 
 /// Avoids visiting `I::FnAbi`
-impl<I: Interner> Visit<I> for FnDefDatum<I> {
+impl<I: Interner> Traverse<I> for FnDefDatum<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn chalk_ir::visit::Visitor<I, BreakTy = B>,
@@ -504,7 +504,7 @@ pub struct AssociatedTyDatum<I: Interner> {
 }
 
 // Manual implementation to avoid I::Identifier type.
-impl<I: Interner> Visit<I> for AssociatedTyDatum<I> {
+impl<I: Interner> Traverse<I> for AssociatedTyDatum<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn chalk_ir::visit::Visitor<I, BreakTy = B>,

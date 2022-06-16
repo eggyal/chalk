@@ -8,8 +8,8 @@ use crate::{
     try_break, AdtId, AssocTypeId, ClausePriority, ClosureId, Constraints, ControlFlow,
     DebruijnIndex, FloatTy, FnDefId, ForeignDefId, GeneratorId, GenericArg, Goals, ImplId, IntTy,
     Interner, Mutability, OpaqueTyId, PlaceholderIndex, ProgramClause, ProgramClauses,
-    QuantifiedWhereClauses, QuantifierKind, Safety, Scalar, Substitution, SuperVisit, TraitId,
-    UintTy, UniverseIndex, Visit, Visitor,
+    QuantifiedWhereClauses, QuantifierKind, Safety, Scalar, Substitution, SuperTraverse, TraitId,
+    Traverse, UintTy, UniverseIndex, Visitor,
 };
 use std::{marker::PhantomData, sync::Arc};
 
@@ -20,7 +20,7 @@ pub fn visit_iter<'i, T, I, B>(
     outer_binder: DebruijnIndex,
 ) -> ControlFlow<B>
 where
-    T: Visit<I>,
+    T: Traverse<I>,
     I: 'i + Interner,
 {
     for e in it {
@@ -29,7 +29,7 @@ where
     ControlFlow::Continue(())
 }
 
-impl<T: Visit<I>, I: Interner> Visit<I> for &T {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for &T {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -39,7 +39,7 @@ impl<T: Visit<I>, I: Interner> Visit<I> for &T {
     }
 }
 
-impl<T: Visit<I>, I: Interner> Visit<I> for Vec<T> {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for Vec<T> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -49,7 +49,7 @@ impl<T: Visit<I>, I: Interner> Visit<I> for Vec<T> {
     }
 }
 
-impl<T: Visit<I>, I: Interner> Visit<I> for &[T] {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for &[T] {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -59,7 +59,7 @@ impl<T: Visit<I>, I: Interner> Visit<I> for &[T] {
     }
 }
 
-impl<T: Visit<I>, I: Interner> Visit<I> for Box<T> {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for Box<T> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -69,7 +69,7 @@ impl<T: Visit<I>, I: Interner> Visit<I> for Box<T> {
     }
 }
 
-impl<T: Visit<I>, I: Interner> Visit<I> for Arc<T> {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for Arc<T> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -99,7 +99,7 @@ tuple_visit!(A, B, C);
 tuple_visit!(A, B, C, D);
 tuple_visit!(A, B, C, D, E);
 
-impl<T: Visit<I>, I: Interner> Visit<I> for Option<T> {
+impl<T: Traverse<I>, I: Interner> Traverse<I> for Option<T> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -112,7 +112,7 @@ impl<T: Visit<I>, I: Interner> Visit<I> for Option<T> {
     }
 }
 
-impl<I: Interner> Visit<I> for GenericArg<I> {
+impl<I: Interner> Traverse<I> for GenericArg<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -123,7 +123,7 @@ impl<I: Interner> Visit<I> for GenericArg<I> {
     }
 }
 
-impl<I: Interner> Visit<I> for Substitution<I> {
+impl<I: Interner> Traverse<I> for Substitution<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -134,7 +134,7 @@ impl<I: Interner> Visit<I> for Substitution<I> {
     }
 }
 
-impl<I: Interner> Visit<I> for Goals<I> {
+impl<I: Interner> Traverse<I> for Goals<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -202,7 +202,7 @@ id_visit!(ClosureId);
 id_visit!(GeneratorId);
 id_visit!(ForeignDefId);
 
-impl<I: Interner> SuperVisit<I> for ProgramClause<I> {
+impl<I: Interner> SuperTraverse<I> for ProgramClause<I> {
     fn super_visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -214,7 +214,7 @@ impl<I: Interner> SuperVisit<I> for ProgramClause<I> {
     }
 }
 
-impl<I: Interner> Visit<I> for ProgramClauses<I> {
+impl<I: Interner> Traverse<I> for ProgramClauses<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -226,7 +226,7 @@ impl<I: Interner> Visit<I> for ProgramClauses<I> {
     }
 }
 
-impl<I: Interner> Visit<I> for Constraints<I> {
+impl<I: Interner> Traverse<I> for Constraints<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -238,7 +238,7 @@ impl<I: Interner> Visit<I> for Constraints<I> {
     }
 }
 
-impl<I: Interner> Visit<I> for QuantifiedWhereClauses<I> {
+impl<I: Interner> Traverse<I> for QuantifiedWhereClauses<I> {
     fn visit_with<B>(
         &self,
         visitor: &mut dyn Visitor<I, BreakTy = B>,
@@ -250,7 +250,7 @@ impl<I: Interner> Visit<I> for QuantifiedWhereClauses<I> {
     }
 }
 
-impl<I: Interner> Visit<I> for PhantomData<I> {
+impl<I: Interner> Traverse<I> for PhantomData<I> {
     fn visit_with<B>(
         &self,
         _visitor: &mut dyn Visitor<I, BreakTy = B>,

@@ -1,7 +1,7 @@
 use crate::debug_span;
 use chalk_ir::fold::{Folder, Traverse};
 use chalk_ir::interner::{HasInterner, Interner};
-use chalk_ir::visit::{Visit, Visitor};
+use chalk_ir::visit::{Traverse, Visitor};
 use chalk_ir::*;
 use std::ops::ControlFlow;
 
@@ -10,7 +10,7 @@ use super::InferenceTable;
 impl<I: Interner> InferenceTable<I> {
     pub fn u_canonicalize<T>(interner: I, value0: &Canonical<T>) -> UCanonicalized<T::Result>
     where
-        T: Clone + HasInterner<Interner = I> + Traverse<I> + Visit<I>,
+        T: Clone + HasInterner<Interner = I> + Traverse<I> + Traverse<I>,
         T::Result: HasInterner<Interner = I>,
     {
         debug_span!("u_canonicalize", "{:#?}", value0);

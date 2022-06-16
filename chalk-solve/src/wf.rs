@@ -8,7 +8,7 @@ use chalk_ir::{
     cast::*,
     fold::shift::Shift,
     interner::Interner,
-    visit::{Visit, Visitor},
+    visit::{Traverse, Visitor},
     *,
 };
 use tracing::debug;
@@ -62,7 +62,7 @@ impl<I: Interner> InputTypeCollector<I> {
         }
     }
 
-    fn types_in(interner: I, value: impl Visit<I>) -> Vec<Ty<I>> {
+    fn types_in(interner: I, value: impl Traverse<I>) -> Vec<Ty<I>> {
         let mut collector = Self::new(interner);
         value.visit_with(&mut collector, DebruijnIndex::INNERMOST);
         collector.types
