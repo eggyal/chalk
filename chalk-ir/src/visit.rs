@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     BoundVar, Const, DebruijnIndex, DomainGoal, Goal, InferenceVar, Interner, Lifetime,
-    PlaceholderIndex, ProgramClause, Ty, WhereClause, SuperTraverse,
+    PlaceholderIndex, ProgramClause, SuperTraverse, Ty, WhereClause,
 };
 
 pub mod visitors;

@@ -4,8 +4,8 @@ use chalk_ir::cast::Cast;
 use chalk_ir::cast::Caster;
 use chalk_ir::*;
 use fold::shift::Shift;
-use traverse::Traverse;
 use interner::{HasInterner, Interner};
+use traverse::Traverse;
 
 pub struct GoalBuilder<'i, I: Interner> {
     db: &'i dyn RustIrDatabase<I>,

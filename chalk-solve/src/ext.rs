@@ -1,6 +1,6 @@
 use crate::infer::InferenceTable;
-use chalk_ir::traverse::Traverse;
 use chalk_ir::interner::{HasInterner, Interner};
+use chalk_ir::traverse::Traverse;
 use chalk_ir::*;
 
 pub trait CanonicalExt<T: HasInterner, I: Interner> {

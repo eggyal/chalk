@@ -514,7 +514,11 @@ impl<I: Interner> Traverse<I> for ProgramClause<I> {
 impl<I: Interner> Traverse<I> for WhereClause<I> {
     type Result = WhereClause<I>;
 
-    fn fold_with<E>(self, folder: &mut dyn Folder<I, Error = E>, outer_binder: DebruijnIndex) -> Result<Self::Result, E> {
+    fn fold_with<E>(
+        self,
+        folder: &mut dyn Folder<I, Error = E>,
+        outer_binder: DebruijnIndex,
+    ) -> Result<Self::Result, E> {
         use WhereClause::*;
         Ok(match self {
             Implemented(vi) => Implemented(vi.fold_with(folder, outer_binder)?),
@@ -536,7 +540,11 @@ impl<I: Interner> Traverse<I> for WhereClause<I> {
 impl<I: Interner> Traverse<I> for DomainGoal<I> {
     type Result = DomainGoal<I>;
 
-    fn fold_with<E>(self, folder: &mut dyn Folder<I, Error = E>, outer_binder: DebruijnIndex) -> Result<Self::Result, E> {
+    fn fold_with<E>(
+        self,
+        folder: &mut dyn Folder<I, Error = E>,
+        outer_binder: DebruijnIndex,
+    ) -> Result<Self::Result, E> {
         use DomainGoal::*;
         Ok(match self {
             Holds(vi) => Holds(vi.fold_with(folder, outer_binder)?),
