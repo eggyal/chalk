@@ -56,7 +56,7 @@
 use std::cmp::min;
 use std::usize;
 
-use chalk_derive::{Fold, HasInterner, Visit};
+use chalk_derive::{HasInterner, Traverse};
 use chalk_ir::interner::Interner;
 use chalk_ir::{
     AnswerSubst, Canonical, ConstrainedSubst, Constraint, DebruijnIndex, Goal, InEnvironment,
@@ -280,11 +280,8 @@ pub(crate) enum AnswerMode {
     Ambiguous,
 }
 
-chalk_ir::copy_fold!(TableIndex);
-chalk_ir::copy_fold!(TimeStamp);
-
-chalk_ir::const_visit!(TableIndex);
-chalk_ir::const_visit!(TimeStamp);
+chalk_ir::const_visit_copy_fold!(TableIndex);
+chalk_ir::const_visit_copy_fold!(TimeStamp);
 
 #[macro_export]
 macro_rules! index_struct {

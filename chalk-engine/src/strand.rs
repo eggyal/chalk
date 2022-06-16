@@ -3,8 +3,9 @@ use crate::{ExClause, TableIndex, TimeStamp};
 use std::fmt::Debug;
 
 use chalk_derive::HasInterner;
-use chalk_ir::fold::{Folder, Traverse};
+use chalk_ir::fold::Folder;
 use chalk_ir::interner::Interner;
+use chalk_ir::traverse::Traverse;
 use chalk_ir::{Canonical, DebruijnIndex, UniverseMap};
 
 #[derive(Clone, Debug, HasInterner)]
@@ -47,5 +48,12 @@ impl<I: Interner> Traverse<I> for Strand<I> {
             last_pursued_time: self.last_pursued_time,
             selected_subgoal: self.selected_subgoal,
         })
+    }
+    fn visit_with<B>(
+        &self,
+        visitor: &mut dyn chalk_ir::visit::Visitor<I, BreakTy = B>,
+        outer_binder: DebruijnIndex,
+    ) -> std::ops::ControlFlow<B> {
+        self.ex_clause.visit_with(visitor, outer_binder)
     }
 }
